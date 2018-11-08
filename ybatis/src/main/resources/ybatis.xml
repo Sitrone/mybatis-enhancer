@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="@{mapperClassName}">
+	<resultMap id="BaseResultMap" type="@{domainClassName}">
+		<enhancer:foreach list="primaryColumns" var="elem">
+			<id column="@{elem.jdbcName}" property="@{elem.javaName}" />
+		</enhancer:foreach>
+		<enhancer:foreach list="normalColumns" var="elem">
+			<result column="@{elem.jdbcName}" property="@{elem.javaName}" />
+		</enhancer:foreach>
+	</resultMap>
+
+	<sql id="Base_Column_List">
+		<enhancer:foreach list="allColumns" var="elem"
+			split=",">
+			`@{elem.jdbcName}`
+		</enhancer:foreach>
+	</sql>
+
+	<select id="selectById" parameterType="java.lang.Object"
+		resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from @{tableName}
+		where 1 = 1
+		<enhancer:foreach list="primaryColumns" var="elem">
+			and `@{elem.jdbcName}` = #{@{elem.javaName}}
+		</enhancer:foreach>
+	</select>
+
+	<select id="selectEntity" parameterType="@{domainClassName}"
+		resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from @{tableName}
+		where 1 = 1
+		<enhancer:foreach list="allColumns" var="elem">
+			<if test="@{elem.javaName} != null">
+				and `@{elem.jdbcName}` = #{@{elem.javaName}}
+			</if>
+		</enhancer:foreach>
+		limit 1
+	</select>
+
+	<select id="selectCount" parameterType="@{domainClassName}"
+		resultType="long">
+		select count(0)
+		from @{tableName}
+		where 1 = 1
+		<enhancer:foreach list="allColumns" var="elem">
+			<if test="@{elem.javaName} != null">
+				and `@{elem.jdbcName}` = #{@{elem.javaName}}
+			</if>
+		</enhancer:foreach>
+		limit 1
+	</select>
+
+	<select id="selectPage" parameterType="com.sununiq.entity.Page" resultMap="BaseResultMap">
+		select
+		  <include refid="Base_Column_List" />
+		from @{tableName}
+		where 1 = 1
+            <if test="entity != null">
+                <enhancer:foreach list="allColumns" var="elem">
+                    <if test="entity.@{elem.javaName} != null">
+                        and `@{elem.jdbcName}` = #{entity.@{elem.javaName}}
+                    </if>
+                </enhancer:foreach>
+            </if>
+            <if test="orderBy != null">
+                order by ${orderByField} ${orderBy}
+            </if>
+            <if test="start != null and end != null">
+                limit ${start}, ${end}
+            </if>
+	</select>
+
+	<select id="selectList" parameterType="@{domainClassName}"
+		resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from @{tableName}
+		where 1 = 1
+		<enhancer:foreach list="allColumns" var="elem">
+			<if test="@{elem.javaName} != null">
+				and `@{elem.jdbcName}` = #{@{elem.javaName}}
+			</if>
+		</enhancer:foreach>
+	</select>
+
+	<select id="selectId" parameterType="@{domainClassName}"
+		resultType="java.lang.Object">
+		select
+		<enhancer:foreach list="primaryColumns" var="elem"
+			split=",">
+			`@{elem.jdbcName}`
+		</enhancer:foreach>
+		from @{tableName}
+		where 1 = 1
+		<enhancer:foreach list="allColumns" var="elem">
+			<if test="@{elem.javaName} != null">
+				and `@{elem.jdbcName}` = #{@{elem.javaName}}
+			</if>
+		</enhancer:foreach>
+		limit 1
+	</select>
+
+	<select id="selectIds" parameterType="@{domainClassName}"
+		resultType="java.lang.Object">
+		select
+		<enhancer:foreach list="primaryColumns" var="elem"
+			split=",">
+			`@{elem.jdbcName}`
+		</enhancer:foreach>
+		from @{tableName}
+		where 1 = 1
+		<enhancer:foreach list="normalColumns" var="elem">
+			<if test="@{elem.javaName} != null">
+				and `@{elem.jdbcName}` = #{@{elem.javaName}}
+			</if>
+		</enhancer:foreach>
+	</select>
+
+	<delete id="deleteById" parameterType="java.lang.Object">
+		delete
+		from @{tableName}
+		where 1=1
+		<enhancer:foreach list="primaryColumns" var="elem">
+			and `@{elem.jdbcName}` = #{@{elem.javaName}}
+		</enhancer:foreach>
+	</delete>
+
+	<insert id="insert" keyProperty="@{primaryColumns.0.jdbcName}"
+		useGeneratedKeys="true" parameterType="@{domainClassName}">
+		insert into @{tableName}
+		(
+		<include refid="Base_Column_List" />
+		)
+		values (
+		<enhancer:foreach list="allColumns" var="elem"
+			split=",">
+			#{@{elem.javaName}}
+		</enhancer:foreach>
+		)
+	</insert>
+
+	<insert id="insertSelective"
+		keyProperty="@{primaryColumns.0.jdbcName}" useGeneratedKeys="true"
+		parameterType="@{domainClassName}">
+		insert into @{tableName}
+		(
+		<enhancer:foreach list="primaryColumns" var="elem"
+			split=",">
+			`@{elem.jdbcName}`
+		</enhancer:foreach>
+		<enhancer:foreach list="normalColumns" var="elem">
+			<if test="@{elem.javaName} != null">
+				,`@{elem.jdbcName}`
+			</if>
+		</enhancer:foreach>
+		)
+		values (
+		<enhancer:foreach list="primaryColumns" var="elem">
+			#{@{elem.javaName}}
+		</enhancer:foreach>
+		<enhancer:foreach list="normalColumns" var="elem">
+			<if test="@{elem.javaName} != null">
+				, #{@{elem.javaName}}
+			</if>
+		</enhancer:foreach>
+		)
+	</insert>
+
+	<insert id="insertBatch"
+		keyProperty="@{primaryColumns.0.jdbcName}" useGeneratedKeys="true"
+		parameterType="java.util.List">
+		insert into @{tableName}
+		(<include refid="Base_Column_List" />)
+		values
+		<foreach collection="list" index="index" item="item"
+			separator=",">
+			(
+			<enhancer:foreach list="allColumns" var="elem"
+				split=",">
+				#{item.@{elem.javaName}}
+			</enhancer:foreach>
+			)
+		</foreach>
+	</insert>
+
+	<update id="update" parameterType="@{domainClassName}">
+		update @{tableName}
+		<set>
+			<enhancer:foreach list="normalColumns" var="elem"
+				split=",">
+				`@{elem.jdbcName}` = #{@{elem.javaName}}
+			</enhancer:foreach>
+		</set>
+		where 1=1
+		<enhancer:foreach list="primaryColumns" var="elem">
+			and `@{elem.jdbcName}` = #{@{elem.javaName}}
+		</enhancer:foreach>
+	</update>
+
+	<update id="updateSelective" parameterType="@{domainClassName}">
+		update @{tableName}
+		<set>
+			<enhancer:foreach list="primaryColumns" var="elem"
+				split=",">
+				`@{elem.jdbcName}` = #{@{elem.javaName}}
+			</enhancer:foreach>
+			<enhancer:foreach list="normalColumns" var="elem">
+				<if test="@{elem.javaName} != null">
+					,`@{elem.jdbcName}` = #{@{elem.javaName}}
+				</if>
+			</enhancer:foreach>
+		</set>
+		where 1=1
+		<enhancer:foreach list="primaryColumns" var="elem">
+			and `@{elem.jdbcName}` = #{@{elem.javaName}}
+		</enhancer:foreach>
+	</update>
+
+	<update id="updateBatch" parameterType="java.util.List">
+		<foreach collection="list" index="index" item="item"
+			separator=";">
+			update @{tableName}
+			<set>
+				<enhancer:foreach list="normalColumns" var="elem"
+					split=",">
+					`@{elem.jdbcName}` = #{item.@{elem.javaName}}
+				</enhancer:foreach>
+			</set>
+			where 1=1
+			<enhancer:foreach list="primaryColumns" var="elem">
+				and `@{elem.jdbcName}` = #{item.@{elem.javaName}}
+			</enhancer:foreach>
+		</foreach>
+	</update>
+
+	<delete id="deleteBatch" parameterType="java.util.List">
+		delete from @{tableName} where @{primaryColumns.0.jdbcName} in
+		<foreach close=")" collection="list" index="index" item="item"
+			open="(" separator=",">
+			#{item}
+		</foreach>
+	</delete>
+
+	<delete id="delete" parameterType="@{domainClassName}">
+		delete from @{tableName} where 1 = 1
+		<enhancer:foreach list="allColumns" var="elem">
+			<if test="@{elem.javaName} != null">
+				and `@{elem.jdbcName}` = #{@{elem.javaName}}
+			</if>
+		</enhancer:foreach>
+	</delete>
+
+	<enhancer:ref path="classpath:ybatis-mappers/@{domainSimpleClassName}Mapper.xml" />
+</mapper>
